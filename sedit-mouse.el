@@ -76,10 +76,10 @@
   (interactive "e")
   (er/expand-region 1)
   (cl-case operation
-    ('copy (kill-ring-save nil nil t)
+    (copy (kill-ring-save nil nil t)
 	   (yank))
-    ('kill (kill-region nil nil t))
-    ('move (mouse-drag-and-drop-region click))))
+    (kill (kill-region nil nil t))
+    (move (mouse-drag-and-drop-region click))))
 
 (defun sedit/mouse-3 (click)
   (interactive "e")
