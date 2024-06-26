@@ -7,7 +7,7 @@ The Interlisp-D editor SEDIT, from the Medley InterLisp system developed at Xero
 This software is released to the public domain
 
 * Dependencies
-The only dependency is [[https://github.com/magnars/expand-region.el][expand-region]].  This provides the main functionality of ~mouse-2~ (see [[#binden][Bindings]]).
+The only dependency is [[https://github.com/magnars/expand-region.el][expand-region]].  This provides the main functionality of ~mouse-2~ (see [[#Bindings][Bindings]]).
 
 * Bindings
 :PROPERTIES:
