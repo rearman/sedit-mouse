@@ -43,6 +43,8 @@
 ;;    has the interlisp pretty-printer running interactively full time, so
 ;;    copying in sub-sexps automatically formats the entire sexp as you go.
 
+;; 4. Turn this into a proper minor-mode.
+
 (require 'expand-region)
 
 (keymap-global-set "<down-mouse-2>" 'sedit/down-mouse-2)
