@@ -43,19 +43,9 @@
 ;;    has the interlisp pretty-printer running interactively full time, so
 ;;    copying in sub-sexps automatically formats the entire sexp as you go.
 
-;; 4. Turn this into a proper minor-mode.
+;;; Code:
 
 (require 'expand-region)
-
-(keymap-global-set "<down-mouse-2>" 'sedit/down-mouse-2)
-(keymap-global-set "<mouse-2>" 'sedit/mouse-2)
-(keymap-global-set "<mouse-3>" 'sedit/mouse-3)
-(keymap-global-set "S-<down-mouse-2>" 'sedit/down-mouse-2)
-(keymap-global-set "S-<mouse-2>" 'sedit/mouse-copy)
-(keymap-global-set "C-<down-mouse-2>" 'sedit/down-mouse-2)
-(keymap-global-set "C-<mouse-2>" 'sedit/mouse-kill)
-(keymap-global-set "C-S-<down-mouse-2>" 'sedit/down-mouse-2)
-(keymap-global-set "C-S-<mouse-2>" 'sedit/mouse-move)
 
 (defun sedit/down-mouse-2 (click)
   (interactive "e")
@@ -129,4 +119,45 @@
 	(when (sedit/set-mark-p click-pos)
 	  (mouse-set-mark click))))))
 
+(define-minor-mode sedit-mouse-mode
+  "Toggles the SEDIT mouse mode.
+Intended to be an as-close-as-possible reconstruction of the
+mouse bindings from Medley Interlisp's SEDIT editor.
+
+Makes the following bindings:
+ Click
+mouse-1: Normal selection
+mouse-2: Select/expand Structure (via 'expand-region')
+mouse-3: Set mark and turn on delete-selection-mode
+
+ Mod/Drag & Click
+S-mouse-2: Copy structure and yank in place
+C-mouse-2: Kill structure
+C-S-mouse-2: move structure"
+  :global nil
+  :init-value nil
+  :lighter " SMse"
+  :keymap
+  (list (cons (kbd "<down-mouse-2>") #'sedit/down-mouse-2)
+	(cons (kbd "S-<down-mouse-2>") #'sedit/down-mouse-2)
+	(cons (kbd "C-<down-mouse-2>") #'sedit/down-mouse-2)
+	(cons (kbd "C-S-<down-mouse-2>") #'sedit/down-mouse-2)
+	(cons (kbd "<mouse-2>") #'sedit/mouse-2)
+	(cons (kbd "<S-mouse-2>") #'sedit/mouse-copy)
+	(cons (kbd "<C-mouse-2>") #'sedit/mouse-kill)
+	(cons (kbd "<C-S-mouse-2>") #'sedit/mouse-move)
+	(cons (kbd "<mouse-3>") #'sedit/mouse-3)))
+
+;; Leaving in case something breaks for `define-minor-mode'
+;; (keymap-global-set "<down-mouse-2>" 'sedit/down-mouse-2)
+;; (keymap-global-set "S-<down-mouse-2>" 'sedit/down-mouse-2)
+;; (keymap-global-set "C-<down-mouse-2>" 'sedit/down-mouse-2)
+;; (keymap-global-set "C-S-<down-mouse-2>" 'sedit/down-mouse-2)
+;; (keymap-global-set "<mouse-2>" 'sedit/mouse-2)
+;; (keymap-global-set "S-<mouse-2>" 'sedit/mouse-copy)
+;; (keymap-global-set "C-<mouse-2>" 'sedit/mouse-kill)
+;; (keymap-global-set "C-S-<mouse-2>" 'sedit/mouse-move)
+;; (keymap-global-set "<mouse-3>" 'sedit/mouse-3)
+
 (provide 'sedit-mouse)
+;;; sedit-mouse.el ends here
