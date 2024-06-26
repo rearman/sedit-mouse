@@ -23,12 +23,12 @@
 ;; Click
 ;; mouse-1: Normal selection
 ;; mouse-2: Select/expand Structure (via 'expand-region')
-;; mouse-3: Set mark and turn on delete-selection-mode
+;; mouse-3: Expand the region towards the click
 
 ;; Mod/Drag & Click
-;; S-mouse-2: copy and yank in place
-;; C-mouse-2: kill
-;; C-S-mouse-2: move
+;; S-mouse-2: Copy structure and yank in place
+;; C-mouse-2: Kill structure
+;; C-S-mouse-2: Move structure via 'mouse-drag-and-drop-region'
 
 ;; TODO
 
