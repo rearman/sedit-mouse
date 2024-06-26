@@ -3,10 +3,10 @@
 ;; Description:
 
 ;; The Interlisp-D editor SEDIT, from the Medley InterLisp system developed at
-;; Xerox-Parc, had mouse-bound structural editing commands.  This is an attempt
-;; to recreate those within emacs, as much as is practical.  See the 'Bindings'
-;; section.  See "https://interlisp.org" for more info on SEDIT and the medley
-;; system in general.
+;; Xerox-Parc, had mouse-bound structural editing commands.  This minor mode is
+;; an attempt to recreate those within emacs, as much as is practical.  See the
+;; 'Bindings' section.  See "https://interlisp.org" for more info on SEDIT and
+;; the medley system in general.
 
 ;; Terms:
 
@@ -133,8 +133,11 @@ mouse-3: Set mark and turn on delete-selection-mode
  Mod/Drag & Click
 S-mouse-2: Copy structure and yank in place
 C-mouse-2: Kill structure
-C-S-mouse-2: move structure"
-  :global nil
+C-S-mouse-2: move structure
+
+You can enable this mode locally in desired buffers, or use
+`global-sedit-mouse-mode' to enable it for all modes that
+support it."
   :init-value nil
   :lighter " SMse"
   :keymap
@@ -147,6 +150,13 @@ C-S-mouse-2: move structure"
 	(cons (kbd "<C-mouse-2>") #'sedit/mouse-kill)
 	(cons (kbd "<C-S-mouse-2>") #'sedit/mouse-move)
 	(cons (kbd "<mouse-3>") #'sedit/mouse-3)))
+
+(defun turn-on-sedit-mouse-mode ()
+  (when (not sedit-mouse-mode)
+    (sedit-mouse-mode 1)))
+
+(define-globalized-minor-mode global-sedit-mouse-mode
+  sedit-mouse-mode turn-on-sedit-mouse-mode)
 
 ;; Leaving in case something breaks for `define-minor-mode'
 ;; (keymap-global-set "<down-mouse-2>" 'sedit/down-mouse-2)
