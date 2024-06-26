@@ -1,13 +1,13 @@
 #+TITLE: SEDIT Mouse
 
 * Introduction
-The Interlisp-D editor SEDIT, from the Medley InterLisp system developed at Xerox-Parc, had mouse-bound structural editing commands.  This minor mode is an attempt to recreate those within emacs, as much as is practical.  See [[id:67eebde7-d742-41e1-9b1e-c13110a1f633][the Bindings section]].  See [[https://interlisp.org][interlisp]] for more info on SEDIT and the medley system in general.
+The Interlisp-D editor SEDIT, from the Medley InterLisp system developed at Xerox-Parc, had mouse-bound structural editing commands.  This minor mode is an attempt to recreate those within emacs, as much as is practical.  See [[Bindings][the Bindings section]].  See [[https://interlisp.org][interlisp]] for more info on SEDIT and the medley system in general.
 
 * Terms
 This software is released to the public domain
 
 * Dependencies
-The only dependency is [[https://github.com/magnars/expand-region.el][expand-region]].  This provides the main functionality of ~mouse-2~ (see [[id:67eebde7-d742-41e1-9b1e-c13110a1f633][Bindings]]).
+The only dependency is [[https://github.com/magnars/expand-region.el][expand-region]].  This provides the main functionality of ~mouse-2~ (see [[Bindings]]).
 
 * Bindings
 :PROPERTIES:
@@ -25,11 +25,12 @@ For a complete guide of the original SEDIT, see [[https://drive.google.com/file/
 | ~C-mouse-2~   | Kill structure                                  |
 | ~C-S-mouse-2~ | Move structure via ~mouse-drag-and-drop-region~ |
 
-* TODO Make ~C-S-mouse-2~ work as click-and-drag.
+* Future improvements
+** TODO Make ~C-S-mouse-2~ work as click-and-drag.
 Currently works with two clicks instead of click, hold, release.
 
-* TODO Make ~mouse-3~ single click closer to SEDIT function.
+** TODO Make ~mouse-3~ single click closer to SEDIT function.
 Currently covering the character selection case, but selecting by structures after a middle click will take some more work.
 
-* TODO Make ~S-mouse-2~ do something WRT whitespace/newlines when yanking.
+** TODO Make ~S-mouse-2~ do something WRT whitespace/newlines when yanking.
 SEDIT has the interlisp pretty-printer running interactively full time, so copying in sub-sexps automatically formats the entire sexp as you go.
