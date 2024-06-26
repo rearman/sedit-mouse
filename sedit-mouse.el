@@ -66,7 +66,11 @@
       (mouse-set-point click)
       (mouse-drag-region click))))
 
-(setq mouse-drag-and-drop-region 'shift)
+;; Unused - originally wanted to have drag-and-drop copy on shift, but setting
+;; this var to shift interferes with the intended move function of C-S.  Could
+;; be used if you make S-<mouse-2> move, and C-S-<mouse-2> copy, but I'm going
+;; for a straight recreation.
+;; (setq mouse-drag-and-drop-region 'shift)
 
 (defun sedit/mouse-2 (click &optional operation)
   (interactive "e")
@@ -93,13 +97,15 @@
   (interactive "e")
   (sedit/mouse-2 click 'move))
 
-(defun sedit/mouse-outside-region-p (pos)
-  (or (> pos (region-end))
-      (< pos (region-beginning))))
-
+;; Could be used in `sedit/down-mouse-2', but doesn't work for some reason...
 (defun sedit/mouse-inside-region-p (pos)
   (or (<= pos (region-end))
       (>= pos (region-beginning))))
+
+;; Inverse of previous (may be useful at some point)
+(defun sedit/mouse-outside-region-p (pos)
+  (or (> pos (region-end))
+      (< pos (region-beginning))))
 
 (defun sedit/set-point-p (pos)
   (or (and (> pos (region-end))
