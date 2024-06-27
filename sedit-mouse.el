@@ -47,10 +47,10 @@
 
 (require 'expand-region)
 
-(defun sedit/down-mouse-2 (click)
+(defun sedit-down-mouse-2 (click)
   (interactive "e")
   (let ((click-pos (cadr (event-start click))))
-    (unless (sedit/mouse-inside-region-p click-pos)
+    (unless (sedit--mouse-inside-region-p click-pos)
       (mouse-set-point click)
       (mouse-drag-region click))))
 
@@ -60,7 +60,7 @@
 ;; for a straight recreation.
 ;; (setq mouse-drag-and-drop-region 'shift)
 
-(defun sedit/mouse-2 (click &optional operation)
+(defun sedit-mouse-2 (click &optional operation)
   (interactive "e")
   (er/expand-region 1)
   (cl-case operation
@@ -69,53 +69,53 @@
     (kill (kill-region nil nil t))
     (move (mouse-drag-and-drop-region click))))
 
-(defun sedit/mouse-3 (click)
+(defun sedit-mouse-3 (click)
   (interactive "e")
-  (sedit/extend-selection click))
+  (sedit-extend-selection click))
 
-(defun sedit/mouse-copy (click)
+(defun sedit-mouse-copy (click)
   (interactive "e")
-  (sedit/mouse-2 click 'copy))
+  (sedit-mouse-2 click 'copy))
 
-(defun sedit/mouse-kill (click)
+(defun sedit-mouse-kill (click)
   (interactive "e")
-  (sedit/mouse-2 click 'kill))
+  (sedit-mouse-2 click 'kill))
 
-(defun sedit/mouse-move (click)
+(defun sedit-mouse-move (click)
   (interactive "e")
-  (sedit/mouse-2 click 'move))
+  (sedit-mouse-2 click 'move))
 
-(defun sedit/mouse-inside-region-p (pos)
+(defun sedit--mouse-inside-region-p (pos)
   (and (use-region-p)
        (<= pos (region-end))
        (>= pos (region-beginning))))
 
 ;; Inverse of previous (may be useful at some point)
-(defun sedit/mouse-outside-region-p (pos)
+(defun sedit--mouse-outside-region-p (pos)
   (and (use-region-p)
        (or (> pos (region-end))
            (< pos (region-beginning)))))
 
-(defun sedit/set-point-p (pos)
+(defun sedit--set-point-p (pos)
   (or (and (> pos (region-end))
            (> (point) (mark)))
       (and (< pos (region-beginning))
            (< (point) (mark)))))
 
-(defun sedit/set-mark-p (pos)
+(defun sedit--set-mark-p (pos)
   (or (and (> pos (region-end))
            (> (mark) (point)))
       (and (< pos (region-beginning))
            (< (mark) (point)))))
 
-(defun sedit/extend-selection (click)
+(defun sedit-extend-selection (click)
   (interactive "e")
   (if (not (use-region-p))
       (mouse-set-mark click)
     (let ((click-pos (cadr (event-start click))))
       (cond
-       ((sedit/set-point-p click-pos) (mouse-set-point click))
-       ((sedit/set-mark-p click-pos)(mouse-set-mark click))))))
+       ((sedit--set-point-p click-pos) (mouse-set-point click))
+       ((sedit--set-mark-p click-pos)(mouse-set-mark click))))))
 
 (define-minor-mode sedit-mouse-mode
   "Toggles the SEDIT mouse mode.
@@ -138,15 +138,15 @@ You can enable this mode locally in desired buffers, or use
   :init-value nil
   :lighter " SMse"
   :keymap
-  (list (cons (kbd "<down-mouse-2>") #'sedit/down-mouse-2)
-        (cons (kbd "S-<down-mouse-2>") #'sedit/down-mouse-2)
-        (cons (kbd "C-<down-mouse-2>") #'sedit/down-mouse-2)
-        (cons (kbd "C-S-<down-mouse-2>") #'sedit/down-mouse-2)
-        (cons (kbd "<mouse-2>") #'sedit/mouse-2)
-        (cons (kbd "<S-mouse-2>") #'sedit/mouse-copy)
-        (cons (kbd "<C-mouse-2>") #'sedit/mouse-kill)
-        (cons (kbd "<C-S-mouse-2>") #'sedit/mouse-move)
-        (cons (kbd "<mouse-3>") #'sedit/mouse-3)))
+  (list (cons (kbd "<down-mouse-2>") #'sedit-down-mouse-2)
+        (cons (kbd "S-<down-mouse-2>") #'sedit-down-mouse-2)
+        (cons (kbd "C-<down-mouse-2>") #'sedit-down-mouse-2)
+        (cons (kbd "C-S-<down-mouse-2>") #'sedit-down-mouse-2)
+        (cons (kbd "<mouse-2>") #'sedit-mouse-2)
+        (cons (kbd "<S-mouse-2>") #'sedit-mouse-copy)
+        (cons (kbd "<C-mouse-2>") #'sedit-mouse-kill)
+        (cons (kbd "<C-S-mouse-2>") #'sedit-mouse-move)
+        (cons (kbd "<mouse-3>") #'sedit-mouse-3)))
 
 (defun turn-on-sedit-mouse-mode ()
   (when (not sedit-mouse-mode)
