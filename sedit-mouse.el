@@ -65,7 +65,7 @@
   (er/expand-region 1)
   (cl-case operation
     (copy (kill-ring-save nil nil t)
-	  (yank))
+          (yank))
     (kill (kill-region nil nil t))
     (move (mouse-drag-and-drop-region click))))
 
@@ -94,19 +94,19 @@
 (defun sedit/mouse-outside-region-p (pos)
   (and (use-region-p)
        (or (> pos (region-end))
-	   (< pos (region-beginning)))))
+           (< pos (region-beginning)))))
 
 (defun sedit/set-point-p (pos)
   (or (and (> pos (region-end))
-	   (> (point) (mark)))
+           (> (point) (mark)))
       (and (< pos (region-beginning))
-	   (< (point) (mark)))))
+           (< (point) (mark)))))
 
 (defun sedit/set-mark-p (pos)
   (or (and (> pos (region-end))
-	   (> (mark) (point)))
+           (> (mark) (point)))
       (and (< pos (region-beginning))
-	   (< (mark) (point)))))
+           (< (mark) (point)))))
 
 (defun sedit/extend-selection (click)
   (interactive "e")
@@ -139,14 +139,14 @@ You can enable this mode locally in desired buffers, or use
   :lighter " SMse"
   :keymap
   (list (cons (kbd "<down-mouse-2>") #'sedit/down-mouse-2)
-	(cons (kbd "S-<down-mouse-2>") #'sedit/down-mouse-2)
-	(cons (kbd "C-<down-mouse-2>") #'sedit/down-mouse-2)
-	(cons (kbd "C-S-<down-mouse-2>") #'sedit/down-mouse-2)
-	(cons (kbd "<mouse-2>") #'sedit/mouse-2)
-	(cons (kbd "<S-mouse-2>") #'sedit/mouse-copy)
-	(cons (kbd "<C-mouse-2>") #'sedit/mouse-kill)
-	(cons (kbd "<C-S-mouse-2>") #'sedit/mouse-move)
-	(cons (kbd "<mouse-3>") #'sedit/mouse-3)))
+        (cons (kbd "S-<down-mouse-2>") #'sedit/down-mouse-2)
+        (cons (kbd "C-<down-mouse-2>") #'sedit/down-mouse-2)
+        (cons (kbd "C-S-<down-mouse-2>") #'sedit/down-mouse-2)
+        (cons (kbd "<mouse-2>") #'sedit/mouse-2)
+        (cons (kbd "<S-mouse-2>") #'sedit/mouse-copy)
+        (cons (kbd "<C-mouse-2>") #'sedit/mouse-kill)
+        (cons (kbd "<C-S-mouse-2>") #'sedit/mouse-move)
+        (cons (kbd "<mouse-3>") #'sedit/mouse-3)))
 
 (defun turn-on-sedit-mouse-mode ()
   (when (not sedit-mouse-mode)
