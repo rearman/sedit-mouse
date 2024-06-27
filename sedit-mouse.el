@@ -50,9 +50,7 @@
 (defun sedit/down-mouse-2 (click)
   (interactive "e")
   (let ((click-pos (cadr (event-start click))))
-    (unless (and (use-region-p)
-		 (<= click-pos (region-end))
-		 (>= click-pos (region-beginning)))
+    (unless (sedit/mouse-inside-region-p click-pos)
       (mouse-set-point click)
       (mouse-drag-region click))))
 
@@ -67,7 +65,7 @@
   (er/expand-region 1)
   (cl-case operation
     (copy (kill-ring-save nil nil t)
-	   (yank))
+	  (yank))
     (kill (kill-region nil nil t))
     (move (mouse-drag-and-drop-region click))))
 
@@ -87,15 +85,16 @@
   (interactive "e")
   (sedit/mouse-2 click 'move))
 
-;; Could be used in `sedit/down-mouse-2', but doesn't work for some reason...
 (defun sedit/mouse-inside-region-p (pos)
-  (or (<= pos (region-end))
-      (>= pos (region-beginning))))
+  (and (use-region-p)
+       (<= pos (region-end))
+       (>= pos (region-beginning))))
 
 ;; Inverse of previous (may be useful at some point)
 (defun sedit/mouse-outside-region-p (pos)
-  (or (> pos (region-end))
-      (< pos (region-beginning))))
+  (and (use-region-p)
+       (or (> pos (region-end))
+	   (< pos (region-beginning)))))
 
 (defun sedit/set-point-p (pos)
   (or (and (> pos (region-end))
@@ -114,10 +113,9 @@
   (if (not (use-region-p))
       (mouse-set-mark click)
     (let ((click-pos (cadr (event-start click))))
-      (if (sedit/set-point-p click-pos)
-	  (mouse-set-point click)
-	(when (sedit/set-mark-p click-pos)
-	  (mouse-set-mark click))))))
+      (cond
+       ((sedit/set-point-p click-pos) (mouse-set-point click))
+       ((sedit/set-mark-p click-pos)(mouse-set-mark click))))))
 
 (define-minor-mode sedit-mouse-mode
   "Toggles the SEDIT mouse mode.
@@ -136,8 +134,7 @@ C-mouse-2: Kill structure
 C-S-mouse-2: move structure
 
 You can enable this mode locally in desired buffers, or use
-`global-sedit-mouse-mode' to enable it for all modes that
-support it."
+`global-sedit-mouse-mode' to enable it globally."
   :init-value nil
   :lighter " SMse"
   :keymap
@@ -157,17 +154,6 @@ support it."
 
 (define-globalized-minor-mode global-sedit-mouse-mode
   sedit-mouse-mode turn-on-sedit-mouse-mode)
-
-;; Leaving in case something breaks for `define-minor-mode'
-;; (keymap-global-set "<down-mouse-2>" 'sedit/down-mouse-2)
-;; (keymap-global-set "S-<down-mouse-2>" 'sedit/down-mouse-2)
-;; (keymap-global-set "C-<down-mouse-2>" 'sedit/down-mouse-2)
-;; (keymap-global-set "C-S-<down-mouse-2>" 'sedit/down-mouse-2)
-;; (keymap-global-set "<mouse-2>" 'sedit/mouse-2)
-;; (keymap-global-set "S-<mouse-2>" 'sedit/mouse-copy)
-;; (keymap-global-set "C-<mouse-2>" 'sedit/mouse-kill)
-;; (keymap-global-set "C-S-<mouse-2>" 'sedit/mouse-move)
-;; (keymap-global-set "<mouse-3>" 'sedit/mouse-3)
 
 (provide 'sedit-mouse)
 ;;; sedit-mouse.el ends here
