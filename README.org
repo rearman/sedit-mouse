@@ -32,5 +32,6 @@ Currently works with two clicks instead of click, hold, release.
 ** TODO Make ~mouse-3~ single click closer to SEDIT function.
 Currently covering the character selection case, but selecting by structures after a middle click will take some more work.
 
-** IN-PROGRESS Make ~S-mouse-2~ do something WRT whitespace/newlines when yanking.
-At one point called a function that calls ~beginning-of-defun~, then calls ~indent-pp-sexp~ with an arg of ~t~.  Didn't like the results.  SEDIT has the interlisp pretty-printer running interactively full time, so copying in sub-sexps automatically formats the entire sexp as you go.  Emacs *does not* have that, and the built-in pretty-printer gives less than satisfactory results (IMO).
+** IN-PROGRESS Make ~*-mouse-2~ do something WRT whitespace/newlines when yanking/killing/moving.
+Currently testing ~sedit-auto-prettify-sexp~, which kills the defun and then passes ~current-kill~ to ~cl-prettyprint~.
+SEDIT has the interlisp pretty-printer running interactively full time, so copying in sub-sexps automatically formats the entire sexp as you go.  Emacs *does not* have that, and the built-in pretty-printer gives less than satisfactory results (IMO).
