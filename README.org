@@ -35,3 +35,6 @@ Currently covering the character selection case, but selecting by structures aft
 ** IN-PROGRESS Make ~*-mouse-2~ do something WRT whitespace/newlines when yanking/killing/moving.
 Currently testing ~sedit-auto-prettify-sexp~, which kills the defun and then passes ~current-kill~ to ~cl-prettyprint~.
 SEDIT has the interlisp pretty-printer running interactively full time, so copying in sub-sexps automatically formats the entire sexp as you go.  Emacs *does not* have that, and the built-in pretty-printer gives less than satisfactory results (IMO).
+
+*** UPDATE [2025-06-27]
+Finally found a reliable way to circumvent =()= being changed to =nil=, which looked bad on lambdas or defuns with no args, and played havoc when using for scheme development.

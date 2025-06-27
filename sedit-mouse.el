@@ -96,18 +96,16 @@
       (mouse-set-mark click)
     (let ((click-pos (cadr (event-start click))))
       (cond ((sedit--set-point-p click-pos)
-             (mouse-set-point click))
-            ((sedit--set-mark-p click-pos)
-             (mouse-set-mark click))))))
+	     (mouse-set-point click))
+	    ((sedit--set-mark-p click-pos)
+	     (mouse-set-mark click))))))
 
 (defun sedit--mouse-inside-region-p (pos)
   (and (use-region-p) (<= pos (region-end)) (>= pos (region-beginning))))
 
 ;; Inverse of previous (may be useful at some point)
 (defun sedit--mouse-outside-region-p (pos)
-  (and (use-region-p)
-       (or (> pos (region-end))
-           (< pos (region-beginning)))))
+  (and (use-region-p) (or (> pos (region-end)) (< pos (region-beginning)))))
 
 (defun sedit--set-point-p (pos)
   (or (and (> pos (region-end)) (> (point) (mark)))
@@ -117,14 +115,20 @@
   (or (and (> pos (region-end)) (> (mark) (point)))
       (and (< pos (region-beginning)) (< (mark) (point)))))
 
-(defun sedit-auto-prettify-sexp nil
+(defun sedit-auto-prettify-sexp ()
   "Run current defun through `cl-prettyprint'.
 Kills the current defun, then reads that kill into the buffer
 through `cl-prettyprint'."
   (interactive)
   (mark-defun)
-  (call-interactively 'kill-region)
-  (cl-prettyprint (read (current-kill 0))))
+  (kill-region (region-beginning) (region-end))
+  (cl-prettyprint (read (current-kill 0)))
+  (save-excursion (progn
+		    (narrow-to-defun)
+		    (replace-regexp "nil$" "()" nil nil nil t)
+		    (end-of-defun)
+		    (backward-char)
+		    (widen))))
 
 (define-minor-mode sedit-mouse-mode
   "Toggles the SEDIT mouse mode.
@@ -145,19 +149,19 @@ C-S-mouse-2: move structure
 You can enable this mode locally in desired buffers, or use
 `global-sedit-mouse-mode' to enable it globally."
   :init-value
-  nil
+  ()
   :lighter
   " SMse"
   :keymap
   (list (cons (kbd "<down-mouse-2>") #'sedit-down-mouse-2)
-        (cons (kbd "S-<down-mouse-2>") #'sedit-down-mouse-2)
-        (cons (kbd "C-<down-mouse-2>") #'sedit-down-mouse-2)
-        (cons (kbd "C-S-<down-mouse-2>") #'sedit-down-mouse-2)
-        (cons (kbd "<mouse-2>") #'sedit-mouse-select-structure)
-        (cons (kbd "<S-mouse-2>") #'sedit-mouse-copy)
-        (cons (kbd "<C-mouse-2>") #'sedit-mouse-kill)
-        (cons (kbd "<C-S-mouse-2>") #'sedit-mouse-move)
-        (cons (kbd "<mouse-3>") #'sedit-extend-selection)))
+	(cons (kbd "S-<down-mouse-2>") #'sedit-down-mouse-2)
+	(cons (kbd "C-<down-mouse-2>") #'sedit-down-mouse-2)
+	(cons (kbd "C-S-<down-mouse-2>") #'sedit-down-mouse-2)
+	(cons (kbd "<mouse-2>") #'sedit-mouse-select-structure)
+	(cons (kbd "<S-mouse-2>") #'sedit-mouse-copy)
+	(cons (kbd "<C-mouse-2>") #'sedit-mouse-kill)
+	(cons (kbd "<C-S-mouse-2>") #'sedit-mouse-move)
+	(cons (kbd "<mouse-3>") #'sedit-extend-selection)))
 
 (defun turn-on-sedit-mouse-mode ()
   (when (not sedit-mouse-mode) (sedit-mouse-mode 1)))
