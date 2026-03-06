@@ -1,4 +1,4 @@
-;;; sedit-mouse.el --- structural editing with the mouse
+;;; sedit-mouse.el --- structural editing with the mouse -*- lexical-binding: t; -*-
 
 ;; Description:
 
