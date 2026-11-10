@@ -33,8 +33,11 @@ Currently works with two clicks instead of click, hold, release.
 Currently covering the character selection case, but selecting by structures after a middle click will take some more work.
 
 ** IN-PROGRESS Make ~*-mouse-2~ do something WRT whitespace/newlines when yanking/killing/moving.
-Currently testing ~sedit-auto-prettify-sexp~, which kills the defun and then passes ~current-kill~ to ~cl-prettyprint~.
+Currently testing ~sedit-auto-prettify-sexp~, which reads the top-level form around point and reflows it with ~cl-prettyprint~.
 SEDIT has the interlisp pretty-printer running interactively full time, so copying in sub-sexps automatically formats the entire sexp as you go.  Emacs *does not* have that, and the built-in pretty-printer gives less than satisfactory results (IMO).
 
 *** UPDATE [2025-06-27]
 Finally found a reliable way to circumvent =()= being changed to =nil=, which looked bad on lambdas or defuns with no args, and played havoc when using for scheme development.
+
+*** UPDATE [2026-11-10]
+Comments now survive the reflow, and =()= is kept everywhere in the form.  A form that does not read is left as it was, and the kill ring is no longer touched.  A comment right after a quote or a dotted-pair dot cannot be kept through the reflow, so that form is only re-indented.

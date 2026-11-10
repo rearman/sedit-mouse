@@ -47,6 +47,7 @@
 ;;; Code:
 
 (require 'expand-region)
+(require 'cl-extra) ; `cl-prettyprint' has no autoload
 
 (defun sedit-down-mouse-2 (click)
   (interactive "e")
@@ -115,20 +116,168 @@
   (or (and (> pos (region-end)) (> (mark) (point)))
       (and (< pos (region-beginning)) (< (mark) (point)))))
 
+(defun sedit--toplevel-bounds ()
+  "Return (START . END) of the top-level form around point, or nil."
+  (let* ((ppss (syntax-ppss))
+	 (start (or (car (nth 9 ppss))
+		    (and (not (nth 8 ppss)) (looking-at "(") (point)))))
+    (when start
+      (cons start (save-excursion (goto-char start) (forward-sexp) (point))))))
+
+(defun sedit--placeholder-prefix (text)
+  "Return a symbol-name prefix that occurs nowhere in TEXT."
+  (let ((n 0))
+    (while (string-search (format "sedit--ph%d-" n) text)
+      (setq n (1+ n)))
+    (format "sedit--ph%d-" n)))
+
+(defun sedit--comment-unsafe-p (pos)
+  "Non-nil if a placeholder atom at POS would change the form.
+That is so after a reader prefix or the dot of a dotted pair."
+  (save-excursion (goto-char pos)
+		  (forward-comment (- (buffer-size)))
+		  (looking-back "\\(?:['`,@]\\|\\(?:^\\|\\s-\\|\\s>\\)\\.\\)"
+				(max (point-min) (- (point) 2)))))
+
+(defun sedit--prettify-string (text)
+  "Return TEXT, one Lisp form, reflowed by `cl-prettyprint'.
+Empty lists stay `()' and comments are kept.  Return nil when a
+comment sits where a placeholder would change the form.  Signal an
+error when TEXT does not read as exactly one form.  The current
+buffer's major mode, `indent-tabs-mode' and `tab-width' set the
+layout."
+  (let ((mode major-mode)
+	(tabs indent-tabs-mode)
+	(width tab-width)
+	(prefix (sedit--placeholder-prefix text))
+	(comments nil)
+	(unsafe nil)
+	(index 0)
+	(start nil))
+    (with-temp-buffer (delay-mode-hooks (funcall mode))
+		      (setq-local indent-tabs-mode tabs)
+		      (setq-local tab-width width)
+		      (insert text)
+		      ;; Find every comment, last first, so earlier positions stay valid.
+		      (goto-char (point-min))
+		      (let ((found nil))
+			(while (setq start (comment-search-forward (point-max)
+								   t))
+			  (push start found)
+			  (end-of-line))
+			(dolist (pos found)
+			  (when (sedit--comment-unsafe-p pos)
+			    (setq unsafe t))
+			  (goto-char pos)
+			  (let* ((end (line-end-position))
+				 (gap-start (save-excursion (skip-syntax-backward " ")
+							    (point)))
+				 ;; A trailing comment keeps the exact gap between code and `;'.
+				 (gap (save-excursion (goto-char gap-start)
+						      (unless (bolp)
+							(buffer-substring-no-properties gap-start
+											pos)))))
+			    (push (list index
+					(string-trim-right (buffer-substring-no-properties pos
+											   end))
+					gap)
+				  comments)
+			    ;; Swap the comment for a placeholder atom read sees as one element.
+			    (delete-region pos end)
+			    (insert " "
+				    prefix
+				    "c"
+				    (number-to-string index)
+				    " ")
+			    (setq index (1+ index)))))
+		      (unless unsafe
+			;; Swap each empty list outside a string for a placeholder atom.
+			(goto-char (point-min))
+			(while (re-search-forward "(\\(?:\\s-\\|\\s>\\)*)"
+						  nil
+						  t)
+			  (unless (nth 8
+				       (save-excursion (syntax-ppss (match-beginning 0))))
+			    (replace-match (concat prefix "nil") t t)))
+			(let* ((source (buffer-string))
+			       (result (read-from-string source)))
+			  (unless (string-empty-p (string-trim (substring source
+									  (cdr result))))
+			    (error "More than one form"))
+			  (erase-buffer)
+			  (let ((print-escape-newlines nil)
+				(print-length nil)
+				(print-level nil)
+				(print-quoted t))
+			    (cl-prettyprint (car result))))
+			(goto-char (point-min))
+			(while (search-forward (concat prefix "nil") nil t)
+			  (replace-match "()" t t))
+			;; Put each comment back, joined to its line or on a line of its own.
+			(goto-char (point-min))
+			(let ((gaps nil))
+			  (while (re-search-forward (concat (regexp-quote prefix)
+							    "c\\([0-9]+\\)\\_>")
+						    nil
+						    t)
+			    (let ((entry (assq (string-to-number (match-string 1))
+					       comments)))
+			      (replace-match "" t t)
+			      (if (nth 2 entry)
+				  (let ((pos (point)))
+				    (skip-syntax-backward " >")
+				    (delete-region (point) pos))
+				(delete-horizontal-space)
+				(unless (bolp) (insert-char 10)))
+			      (insert (nth 1 entry))
+			      (when (nth 2 entry)
+				;; The marker sits at `;' & advances past whitespace inserted there.
+				(push (cons (copy-marker (- (point)
+							    (length (nth 1
+									 entry)))
+							 t)
+					    (nth 2 entry))
+				      gaps))
+			      (delete-horizontal-space)
+			      (unless (eolp) (insert-char 10))))
+			  ;; `indent-sexp' prints no progress message, unlike `indent-region'.
+			  (goto-char (point-min))
+			  (skip-syntax-forward " >")
+			  (indent-sexp)
+			  ;; `indent-sexp' moves trailing comments to `comment-column'; undo that.
+			  (dolist (gap gaps)
+			    (goto-char (car gap))
+			    (let ((pos (point)))
+			      (skip-syntax-backward " ")
+			      (delete-region (point) pos)
+			      (insert (cdr gap)))
+			    (set-marker (car gap) nil)))
+			(string-trim (buffer-string))))))
+
 (defun sedit-auto-prettify-sexp ()
-  "Run current defun through `cl-prettyprint'.
-Kills the current defun, then reads that kill into the buffer
-through `cl-prettyprint'."
+  "Reflow the top-level form around point with `cl-prettyprint'.
+Empty lists stay `()' and comments are kept.  A form with a comment
+after a reader prefix or a dotted-pair dot is only re-indented.  A
+form that does not read is left as it was.  Point ends just after
+the form."
   (interactive)
-  (mark-defun)
-  (kill-region (region-beginning) (region-end))
-  (cl-prettyprint (read (current-kill 0)))
-  (save-excursion (progn
-		    (narrow-to-defun)
-		    (replace-regexp "nil$" "()" nil nil nil t)
-		    (end-of-defun)
-		    (backward-char)
-		    (widen))))
+  (condition-case err
+      (let ((bounds (sedit--toplevel-bounds)))
+	(when bounds
+	  (let* ((start (car bounds))
+		 (end (copy-marker (cdr bounds)))
+		 (old (buffer-substring-no-properties start end))
+		 (new (sedit--prettify-string old)))
+	    (cond ((null new)
+		   (save-excursion (goto-char start) (indent-sexp)))
+		  ((not (string= new old))
+		   (atomic-change-group (delete-region start end)
+					(goto-char start)
+					(insert new))))
+	    (goto-char end)
+	    (set-marker end nil))))
+    (error (message "sedit-auto-prettify-sexp: %s; form left as it was"
+		    (error-message-string err)))))
 
 (define-minor-mode sedit-mouse-mode
   "Toggles the SEDIT mouse mode.
