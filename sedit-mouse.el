@@ -49,6 +49,10 @@
 (require 'expand-region)
 (require 'cl-extra) ; `cl-prettyprint' has no autoload
 
+(defgroup sedit-mouse nil
+  "Structural editing with the mouse, after Medley Interlisp's SEDIT."
+  :group 'mouse)
+
 (defun sedit-down-mouse-2 (click)
   (interactive "e")
   (let ((click-pos (cadr (event-start click))))
@@ -62,7 +66,7 @@
 ;; for a straight recreation.
 ;; (setq mouse-drag-and-drop-region 'shift)
 
-(defun sedit-mouse-select-structure (click)
+(defun sedit-mouse-select-structure (_click)
   (interactive "e")
   (er/expand-region 1))
 
@@ -287,7 +291,7 @@ mouse bindings from Medley Interlisp's SEDIT editor.
 Makes the following bindings:
  Click
 mouse-1: Normal selection
-mouse-2: Select/expand Structure (via 'expand-region')
+mouse-2: Select/expand Structure (via `expand-region')
 mouse-3: Set mark and turn on delete-selection-mode
 
  Mod/Drag & Click
@@ -317,7 +321,8 @@ You can enable this mode locally in desired buffers, or use
 
 (define-globalized-minor-mode global-sedit-mouse-mode
   sedit-mouse-mode
-  turn-on-sedit-mouse-mode)
+  turn-on-sedit-mouse-mode
+  :group 'sedit-mouse)
 
 (provide 'sedit-mouse)
 ;;; sedit-mouse.el ends here
