@@ -317,7 +317,8 @@ the form."
       (let ((bounds (sedit--toplevel-bounds)))
 	(when bounds
 	  (let* ((start (car bounds))
-		 (end (copy-marker (cdr bounds)))
+		 ;; Type t keeps the marker after text inserted at START.
+		 (end (copy-marker (cdr bounds) t))
 		 (old (buffer-substring-no-properties start end))
 		 (new (sedit--prettify-string old)))
 	    (cond ((null new)
