@@ -40,4 +40,4 @@ SEDIT has the interlisp pretty-printer running interactively full time, so copyi
 Finally found a reliable way to circumvent =()= being changed to =nil=, which looked bad on lambdas or defuns with no args, and played havoc when using for scheme development.
 
 *** UPDATE [2026-11-10]
-Comments now survive the reflow, and =()= is kept everywhere in the form.  A form that does not read is left as it was, and the kill ring is no longer touched.  A comment right after a quote or a dotted-pair dot cannot be kept through the reflow, so that form is only re-indented.
+Comments now survive the reflow, and =()= is kept everywhere in the form.  Number literals keep the form they were written in, so =?a= stays =?a= and =#x10= stays =#x10=.  A form that does not read is left as it was, and the kill ring is no longer touched.  A comment right after a quote or a dotted-pair dot cannot be kept through the reflow, so that form is only re-indented.

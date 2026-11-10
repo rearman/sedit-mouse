@@ -129,11 +129,13 @@
       (cons start (save-excursion (goto-char start) (forward-sexp) (point))))))
 
 (defun sedit--placeholder-prefix (text)
-  "Return a symbol-name prefix that occurs nowhere in TEXT."
-  (let ((n 0))
-    (while (string-search (format "sedit--ph%d-" n) text)
-      (setq n (1+ n)))
-    (format "sedit--ph%d-" n)))
+  "Return a one-character symbol-name prefix that occurs nowhere in TEXT.
+It comes from the Unicode private-use area, so placeholders stay about
+as wide as the text they stand for and the layout matches."
+  (let ((char #xE000))
+    (while (string-search (string char) text)
+      (setq char (1+ char)))
+    (string char)))
 
 (defun sedit--comment-unsafe-p (pos)
   "Non-nil if a placeholder atom at POS would change the form.
@@ -143,9 +145,43 @@ That is so after a reader prefix or the dot of a dotted pair."
 		  (looking-back "\\(?:['`,@]\\|\\(?:^\\|\\s-\\|\\s>\\)\\.\\)"
 				(max (point-min) (- (point) 2)))))
 
+(defun sedit--hide-literals (prefix)
+  "Swap each number literal that would not print as written for a placeholder.
+That covers character literals such as ?a, radix numbers such as #x10,
+and numbers such as 1.50 or +1.  Work on the current buffer, whose
+comments are already gone.  Return an alist of (INDEX . TEXT)."
+  (let ((literals nil)
+	(index 0))
+    (goto-char (point-min))
+    (while (re-search-forward "\\(?:\\`\\|\\s-\\|\\s>\\|\\s(\\|\\s)\\|\\s'\\)\\([-?#+.0-9]\\)"
+			      nil
+			      t)
+      (let ((start (match-beginning 1))
+	    (resume (match-end 1)))
+	(unless (nth 8 (save-excursion (syntax-ppss start)))
+	  (goto-char start)
+	  (let* ((object (condition-case nil
+			     (read (current-buffer))
+			   (error nil)))
+		 (end (point)))
+	    (when (and (numberp object)
+		       (not (string= (buffer-substring-no-properties start
+								     end)
+				     (prin1-to-string object))))
+	      (push (cons index (buffer-substring-no-properties start end))
+		    literals)
+	      (delete-region start end)
+	      (goto-char start)
+	      (insert prefix "a" (number-to-string index))
+	      (setq index (1+ index))
+	      (setq resume (point)))))
+	(goto-char resume)))
+    literals))
+
 (defun sedit--prettify-string (text)
   "Return TEXT, one Lisp form, reflowed by `cl-prettyprint'.
-Empty lists stay `()' and comments are kept.  Return nil when a
+Empty lists stay `()', comments are kept, and number literals keep
+the form they were written in.  Return nil when a
 comment sits where a placeholder would change the form.  Signal an
 error when TEXT does not read as exactly one form.  The current
 buffer's major mode, `indent-tabs-mode' and `tab-width' set the
@@ -155,6 +191,7 @@ layout."
 	(width tab-width)
 	(prefix (sedit--placeholder-prefix text))
 	(comments nil)
+	(literals nil)
 	(unsafe nil)
 	(index 0)
 	(start nil))
@@ -195,6 +232,7 @@ layout."
 				    " ")
 			    (setq index (1+ index)))))
 		      (unless unsafe
+			(setq literals (sedit--hide-literals prefix))
 			;; Swap each empty list outside a string for a placeholder atom.
 			(goto-char (point-min))
 			(while (re-search-forward "(\\(?:\\s-\\|\\s>\\)*)"
@@ -202,7 +240,7 @@ layout."
 						  t)
 			  (unless (nth 8
 				       (save-excursion (syntax-ppss (match-beginning 0))))
-			    (replace-match (concat prefix "nil") t t)))
+			    (replace-match (concat prefix "n") t t)))
 			(let* ((source (buffer-string))
 			       (result (read-from-string source)))
 			  (unless (string-empty-p (string-trim (substring source
@@ -215,8 +253,18 @@ layout."
 				(print-quoted t))
 			    (cl-prettyprint (car result))))
 			(goto-char (point-min))
-			(while (search-forward (concat prefix "nil") nil t)
+			(while (search-forward (concat prefix "n") nil t)
 			  (replace-match "()" t t))
+			;; Put each number literal back as it was written.
+			(goto-char (point-min))
+			(while (re-search-forward (concat (regexp-quote prefix)
+							  "a\\([0-9]+\\)\\_>")
+						  nil
+						  t)
+			  (replace-match (cdr (assq (string-to-number (match-string 1))
+						    literals))
+					 t
+					 t))
 			;; Put each comment back, joined to its line or on a line of its own.
 			(goto-char (point-min))
 			(let ((gaps nil))
